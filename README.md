@@ -17,7 +17,6 @@
 # k8sJsontoUvl
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17879567.svg)](https://doi.org/10.5281/zenodo.17879567)
 
-Repository for the project **Automated Synthesis of Kubernetes Variability from OpenAPI Schemas**
 
 ![Overview of the conversion process](resources/k8sJsontoUvl_overview.PNG)
 
