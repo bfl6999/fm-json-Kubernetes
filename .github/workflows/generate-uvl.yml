@@ -1,0 +1,63 @@
+name: Generate and Validate FM UVL k8s
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Kubernetes version (e.g. v1.30.2)"
+        required: true
+        default: "v1.32.2"
+
+jobs:
+  generate-uvl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m venv env
+          source env/bin/activate
+          pip install -r requirements.txt
+
+      - name: Download schema
+        run: |
+          chmod +x scripts/ci/download_schema.sh
+          bash scripts/ci/download_schema.sh ${{ github.event.inputs.version }}
+
+      - name: Generate UVL model
+        run: |
+          source env/bin/activate
+          python scripts/ci/generate_model.py ${{ github.event.inputs.version }}
+
+      - name: Validate UVL model
+        run: |
+          source env/bin/activate
+          python scripts/ci/valid_model.py ${{ github.event.inputs.version }}
+
+      - name: Compare with previous version
+        run: |
+          source env/bin/activate
+          python scripts/ci/compare_models.py ${{ github.event.inputs.version }}
+          
+      - name: Upload UVL + log
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-${{ github.event.inputs.version }}
+          path: |
+            variability_model/ci_k8s_models/${{ github.event.inputs.version }}/kubernetes_combined.uvl
+            variability_model/ci_k8s_models/${{ github.event.inputs.version }}/validation_log.txt
+
+      - name: Upload changelog HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-${{ github.event.inputs.version }}
+          path: variability_model/ci_k8s_models/diffs/*
+
